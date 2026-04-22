@@ -106,6 +106,7 @@ pnpm test                          # Playwright E2E (requires running stack)
 | UI surface (tabs, chat composer, dashboard)       | [`docs/ui.md`](./docs/ui.md)                    |
 | Auth, cookies, guest user flow                    | [`docs/auth.md`](./docs/auth.md)                |
 | Docker image, compose wiring, env                 | [`docs/docker.md`](./docs/docker.md)            |
+| Running / resetting / troubleshooting the stack   | [`docs/docker-instructions.md`](./docs/docker-instructions.md) |
 | E2E tests                                         | [`docs/testing.md`](./docs/testing.md)          |
 | Overall data flow / architecture decisions        | [`docs/architecture.md`](./docs/architecture.md)|
 

@@ -172,7 +172,7 @@ export function ChatTab({
   }, [busy, input, router, type]);
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-3.25rem-2.25rem)] w-full max-w-3xl flex-col px-4">
+    <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col px-4">
       <div className="flex-1 space-y-4 overflow-y-auto py-6">
         {messages.length === 0 ? (
           <div className="pt-20 text-center text-muted-foreground">

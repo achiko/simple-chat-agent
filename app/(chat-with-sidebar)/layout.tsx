@@ -1,10 +1,7 @@
 import { Suspense } from "react";
 import { ChatSidebar } from "@/components/chat-sidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { FloatingSidebarTrigger } from "@/components/chat-sidebar/floating-trigger";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function ChatWithSidebarLayout({
   children,
@@ -16,12 +13,9 @@ export default function ChatWithSidebarLayout({
       <Suspense fallback={null}>
         <ChatSidebar />
       </Suspense>
-      <SidebarInset>
-        <div className="flex items-center gap-2 border-b bg-background px-3 py-1.5">
-          <SidebarTrigger />
-          <span className="text-xs text-muted-foreground">Chat history</span>
-        </div>
-        <div className="flex-1">{children}</div>
+      <SidebarInset className="relative">
+        <FloatingSidebarTrigger className="absolute top-3 left-3 z-20 bg-background/80 shadow-sm backdrop-blur" />
+        {children}
       </SidebarInset>
     </SidebarProvider>
   );

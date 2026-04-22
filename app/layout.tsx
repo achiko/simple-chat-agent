@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Suspense } from "react";
 import { Toaster } from "sonner";
-import { TabsNav } from "@/components/tabs-nav";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -81,12 +79,7 @@ export default function RootLayout({
             basePath={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/auth`}
           >
             <TooltipProvider>
-              <div className="flex min-h-dvh flex-col">
-                <Suspense fallback={<div className="h-[3.25rem] border-b" />}>
-                  <TabsNav />
-                </Suspense>
-                <main className="flex-1">{children}</main>
-              </div>
+              {children}
               <Toaster position="top-center" theme="system" />
             </TooltipProvider>
           </SessionProvider>

@@ -18,7 +18,7 @@ export default function Page({
 
 function ChatFallback() {
   return (
-    <div className="mx-auto flex h-[calc(100dvh-3.25rem-2.25rem)] w-full max-w-3xl items-center justify-center px-4 text-muted-foreground">
+    <div className="mx-auto flex h-dvh w-full max-w-3xl items-center justify-center px-4 text-muted-foreground">
       Loading chat…
     </div>
   );

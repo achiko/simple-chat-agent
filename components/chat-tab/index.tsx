@@ -134,12 +134,14 @@ export function ChatTab({
       // /chat/[sessionId] route. The server component rehydrates the
       // just-inserted job, and the reconnect-on-mount effect re-opens SSE
       // (stream replays any chunks already persisted). Clear the optimistic
-      // user bubble first — next.config `cachedNavigations: true` would
-      // otherwise preserve it on the "/" route cache and bleed back on
-      // "+ New chat".
+      // user bubble AND the sessionId ref first — next.config
+      // `cachedNavigations: true` preserves this "/" route tree, so any
+      // state we leave behind bleeds back when the user hits "+ New chat".
       if (firstPrompt) {
+        const newSessionId = sessionIdRef.current;
+        sessionIdRef.current = null;
         setMessages([]);
-        router.replace(`/chat/${sessionIdRef.current}`);
+        router.replace(`/chat/${newSessionId}`);
         return;
       }
 

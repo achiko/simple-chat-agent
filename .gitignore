@@ -8,6 +8,7 @@ node_modules/
 .next/
 out/
 next-env.d.ts
+.turbo
 
 # Production builds
 build/
@@ -18,7 +19,12 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
+blob-report/
 playwright/.cache/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/*
 
 # Logs
 *.log
@@ -35,6 +41,7 @@ logs/
 
 # TypeScript
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Vercel
 .vercel
@@ -51,3 +58,4 @@ Thumbs.db
 *.swo
 .idea/
 .vscode/
+*.pem

@@ -1,0 +1,61 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e8]: Chat AI Agent
+        - link "+ New chat" [ref=e9] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e10]:
+        - list [ref=e12]:
+          - listitem [ref=e13]:
+            - link "Chat" [ref=e14] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e15]: Chat
+          - listitem [ref=e16]:
+            - link "History" [ref=e17] [cursor=pointer]:
+              - /url: /history
+              - generic [ref=e18]: History
+          - listitem [ref=e19]:
+            - link "Gallery" [ref=e20] [cursor=pointer]:
+              - /url: /gallery
+              - generic [ref=e21]: Gallery
+          - listitem [ref=e22]:
+            - link "System" [ref=e23] [cursor=pointer]:
+              - /url: /system
+              - generic [ref=e24]: System
+        - generic [ref=e25]:
+          - generic [ref=e26]: Recent
+          - list [ref=e27]:
+            - listitem [ref=e44]:
+              - link "Verify B. 33 minutes ago" [ref=e137] [cursor=pointer]:
+                - /url: /chat/554fd2ad-5cf1-4104-9f42-d3b41d909006
+                - generic [ref=e46]:
+                  - generic [ref=e47]: Verify B.
+                  - generic [ref=e48]: 33 minutes ago
+            - listitem [ref=e49]:
+              - link "Verify A. 33 minutes ago" [ref=e64] [cursor=pointer]:
+                - /url: /chat/3cfd9421-c11a-44a7-94fd-738b3c5e035b
+                - generic [ref=e51]:
+                  - generic [ref=e52]: Verify A.
+                  - generic [ref=e53]: 33 minutes ago
+            - listitem [ref=e54]:
+              - link "First chat after fix. 37 minutes ago" [ref=e65] [cursor=pointer]:
+                - /url: /chat/75d0950e-3c13-48a3-b28c-5d37199b1f08
+                - generic [ref=e56]:
+                  - generic [ref=e57]: First chat after fix.
+                  - generic [ref=e58]: 37 minutes ago
+            - listitem [ref=e59]:
+              - link "Say hi in one short sentence. about 1 hour ago" [ref=e60] [cursor=pointer]:
+                - /url: /chat/29980aaa-515c-4af7-abbc-7050e8011137
+                - generic [ref=e61]:
+                  - generic [ref=e62]: Say hi in one short sentence.
+                  - generic [ref=e63]: about 1 hour ago
+    - main [ref=e29]:
+      - button "Toggle Sidebar" [ref=e30]:
+        - img
+        - generic [ref=e31]: Toggle Sidebar
+      - generic [ref=e138]:
+        - heading "Gallery" [level=1] [ref=e139]
+        - generic [ref=e140]: No images yet.
+  - region "Notifications alt+T"
+  - alert [ref=e43]

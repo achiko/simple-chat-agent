@@ -1,0 +1,35 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e8]: Chat AI Agent
+        - link "+ New chat" [ref=e9] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e10]:
+        - list [ref=e12]:
+          - listitem [ref=e13]:
+            - link "Chat" [ref=e14] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e15]: Chat
+          - listitem [ref=e16]:
+            - link "History" [ref=e17] [cursor=pointer]:
+              - /url: /history
+              - generic [ref=e18]: History
+          - listitem [ref=e19]:
+            - link "Gallery" [ref=e20] [cursor=pointer]:
+              - /url: /gallery
+              - generic [ref=e21]: Gallery
+          - listitem [ref=e22]:
+            - link "System" [ref=e23] [cursor=pointer]:
+              - /url: /system
+              - generic [ref=e24]: System
+        - generic [ref=e25]:
+          - generic [ref=e26]: Recent
+          - list [ref=e27]:
+            - generic [ref=e28]: Loading…
+    - main [ref=e29]:
+      - generic [ref=e30]:
+        - heading "System" [level=1] [ref=e31]
+        - generic [ref=e32]: Loading…
+  - region "Notifications alt+T"
+  - alert [ref=e33]

@@ -1,0 +1,67 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]: Chat AI Agent
+      - link "Chat" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - link "History" [ref=e6] [cursor=pointer]:
+        - /url: /history
+      - link "Gallery" [ref=e7] [cursor=pointer]:
+        - /url: /gallery
+      - link "System" [ref=e8] [cursor=pointer]:
+        - /url: /system
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e13]:
+          - link "+ New chat" [ref=e15] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e17]:
+            - generic [ref=e18]: Recent
+            - list [ref=e19]:
+              - listitem [ref=e20]:
+                - link "Verify B. 13 minutes ago" [ref=e21] [cursor=pointer]:
+                  - /url: /chat/554fd2ad-5cf1-4104-9f42-d3b41d909006
+                  - generic [ref=e22]:
+                    - generic [ref=e23]: Verify B.
+                    - generic [ref=e24]: 13 minutes ago
+              - listitem [ref=e25]:
+                - link "Verify A. 14 minutes ago" [ref=e26] [cursor=pointer]:
+                  - /url: /chat/3cfd9421-c11a-44a7-94fd-738b3c5e035b
+                  - generic [ref=e27]:
+                    - generic [ref=e28]: Verify A.
+                    - generic [ref=e29]: 14 minutes ago
+              - listitem [ref=e30]:
+                - link "First chat after fix. 18 minutes ago" [ref=e31] [cursor=pointer]:
+                  - /url: /chat/75d0950e-3c13-48a3-b28c-5d37199b1f08
+                  - generic [ref=e32]:
+                    - generic [ref=e33]: First chat after fix.
+                    - generic [ref=e34]: 18 minutes ago
+              - listitem [ref=e35]:
+                - link "Say hi in one short sentence. 34 minutes ago" [ref=e36] [cursor=pointer]:
+                  - /url: /chat/29980aaa-515c-4af7-abbc-7050e8011137
+                  - generic [ref=e37]:
+                    - generic [ref=e38]: Say hi in one short sentence.
+                    - generic [ref=e39]: 34 minutes ago
+        - main [ref=e40]:
+          - generic [ref=e41]:
+            - button "Toggle Sidebar" [ref=e42]:
+              - img
+              - generic [ref=e43]: Toggle Sidebar
+            - generic [ref=e44]: Chat history
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - generic [ref=e49]: Verify B.
+              - generic [ref=e50]:
+                - generic [ref=e51]: "I’m not sure what “B” refers to. Could you share the exact item/statement “B” and what kind of verification you need? - Context/source: Where does “B” come from (problem set, document, code, dataset, image)? - Verification goal: Do you want a proof, fact-check, test execution, calculations, or authenticity check? - Materials: Please paste or attach the text/code/image/data for “B,” plus any assumptions or criteria. - Output format: Any required format or depth? Once I have that, I’ll verify it step by step."
+                - generic [ref=e52]: in 9 · out 484 · total 493 · $0.00485
+            - generic [ref=e53]:
+              - generic [ref=e54]:
+                - generic [ref=e55]:
+                  - button "Text" [ref=e56]
+                  - button "Image" [ref=e57]
+                - generic [ref=e58]: Streams token-by-token via queue + worker.
+              - generic [ref=e59]:
+                - textbox "Your prompt" [ref=e60]
+                - button "Send" [disabled]
+  - region "Notifications alt+T"
+  - alert [ref=e61]

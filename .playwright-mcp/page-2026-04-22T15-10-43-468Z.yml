@@ -1,0 +1,129 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e8]: Chat AI Agent
+        - link "+ New chat" [ref=e9] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e10]:
+        - list [ref=e12]:
+          - listitem [ref=e13]:
+            - link "Chat" [ref=e14] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e15]: Chat
+          - listitem [ref=e16]:
+            - link "History" [ref=e17] [cursor=pointer]:
+              - /url: /history
+              - generic [ref=e18]: History
+          - listitem [ref=e19]:
+            - link "Gallery" [ref=e20] [cursor=pointer]:
+              - /url: /gallery
+              - generic [ref=e21]: Gallery
+          - listitem [ref=e22]:
+            - link "System" [ref=e23] [cursor=pointer]:
+              - /url: /system
+              - generic [ref=e24]: System
+        - generic [ref=e25]:
+          - generic [ref=e26]: Recent
+          - list [ref=e27]:
+            - listitem [ref=e44]:
+              - link "Verify B. 32 minutes ago" [ref=e45] [cursor=pointer]:
+                - /url: /chat/554fd2ad-5cf1-4104-9f42-d3b41d909006
+                - generic [ref=e46]:
+                  - generic [ref=e47]: Verify B.
+                  - generic [ref=e48]: 32 minutes ago
+            - listitem [ref=e49]:
+              - link "Verify A. 33 minutes ago" [ref=e64] [cursor=pointer]:
+                - /url: /chat/3cfd9421-c11a-44a7-94fd-738b3c5e035b
+                - generic [ref=e51]:
+                  - generic [ref=e52]: Verify A.
+                  - generic [ref=e53]: 33 minutes ago
+            - listitem [ref=e54]:
+              - link "First chat after fix. 37 minutes ago" [ref=e65] [cursor=pointer]:
+                - /url: /chat/75d0950e-3c13-48a3-b28c-5d37199b1f08
+                - generic [ref=e56]:
+                  - generic [ref=e57]: First chat after fix.
+                  - generic [ref=e58]: 37 minutes ago
+            - listitem [ref=e59]:
+              - link "Say hi in one short sentence. about 1 hour ago" [ref=e60] [cursor=pointer]:
+                - /url: /chat/29980aaa-515c-4af7-abbc-7050e8011137
+                - generic [ref=e61]:
+                  - generic [ref=e62]: Say hi in one short sentence.
+                  - generic [ref=e63]: about 1 hour ago
+    - main [ref=e29]:
+      - button "Toggle Sidebar" [ref=e30]:
+        - img
+        - generic [ref=e31]: Toggle Sidebar
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - heading "History" [level=1] [ref=e68]
+          - button "Refresh" [ref=e69]
+        - generic [ref=e70]:
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - generic [ref=e74]: Verify B.
+              - generic [ref=e75]:
+                - generic [ref=e76]: TEXT
+                - generic [ref=e77]: COMPLETED
+                - generic [ref=e78]: 4/22/2026, 6:38:29 PM
+                - generic [ref=e79]: tokens 493
+                - generic [ref=e80]: $0.00485
+            - link "Replay" [ref=e81] [cursor=pointer]:
+              - /url: /api/jobs/e346564c-90a9-46e6-8b0c-c942f27cf687/stream
+          - generic [ref=e83]:
+            - generic [ref=e84]:
+              - generic [ref=e85]: Verify A.
+              - generic [ref=e86]:
+                - generic [ref=e87]: TEXT
+                - generic [ref=e88]: COMPLETED
+                - generic [ref=e89]: 4/22/2026, 6:37:58 PM
+                - generic [ref=e90]: tokens 539
+                - generic [ref=e91]: $0.00531
+            - link "Replay" [ref=e92] [cursor=pointer]:
+              - /url: /api/jobs/3ff49d25-6c5b-480a-aec4-fb860f05eee4/stream
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - generic [ref=e96]: Second chat after fix.
+              - generic [ref=e97]:
+                - generic [ref=e98]: TEXT
+                - generic [ref=e99]: COMPLETED
+                - generic [ref=e100]: 4/22/2026, 6:34:09 PM
+                - generic [ref=e101]: tokens 660
+                - generic [ref=e102]: $0.00650
+            - link "Replay" [ref=e103] [cursor=pointer]:
+              - /url: /api/jobs/858ab531-22da-4316-b202-8b726b8e1e42/stream
+          - generic [ref=e105]:
+            - generic [ref=e106]:
+              - generic [ref=e107]: First chat after fix.
+              - generic [ref=e108]:
+                - generic [ref=e109]: TEXT
+                - generic [ref=e110]: COMPLETED
+                - generic [ref=e111]: 4/22/2026, 6:33:23 PM
+                - generic [ref=e112]: tokens 493
+                - generic [ref=e113]: $0.00483
+            - link "Replay" [ref=e114] [cursor=pointer]:
+              - /url: /api/jobs/757541b6-116c-4352-9e65-d2c302d0f149/stream
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: What is 2 + 2?
+              - generic [ref=e119]:
+                - generic [ref=e120]: TEXT
+                - generic [ref=e121]: COMPLETED
+                - generic [ref=e122]: 4/22/2026, 6:17:56 PM
+                - generic [ref=e123]: tokens 39
+                - generic [ref=e124]: $0.00027
+            - link "Replay" [ref=e125] [cursor=pointer]:
+              - /url: /api/jobs/9f27787a-47e3-4167-a7e3-2caa8d7c29a3/stream
+          - generic [ref=e127]:
+            - generic [ref=e128]:
+              - generic [ref=e129]: Say hi in one short sentence.
+              - generic [ref=e130]:
+                - generic [ref=e131]: TEXT
+                - generic [ref=e132]: COMPLETED
+                - generic [ref=e133]: 4/22/2026, 6:16:53 PM
+                - generic [ref=e134]: tokens 127
+                - generic [ref=e135]: $0.00116
+            - link "Replay" [ref=e136] [cursor=pointer]:
+              - /url: /api/jobs/a1ab0b9f-70e4-49e0-8144-d82557e49fff/stream
+  - region "Notifications alt+T"
+  - alert [ref=e43]

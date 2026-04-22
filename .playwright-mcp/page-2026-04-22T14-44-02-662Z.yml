@@ -1,0 +1,74 @@
+- generic:
+  - generic:
+    - navigation:
+      - generic: Chat AI Agent
+      - link:
+        - /url: /
+        - text: Chat
+      - link:
+        - /url: /history
+        - text: History
+      - link:
+        - /url: /gallery
+        - text: Gallery
+      - link:
+        - /url: /system
+        - text: System
+    - main:
+      - generic:
+        - main:
+          - generic:
+            - button:
+              - img
+              - generic: Toggle Sidebar
+            - generic: Chat history
+          - generic:
+            - generic:
+              - generic:
+                - generic: Ask anything. Switch to Image to generate a picture.
+              - generic:
+                - generic:
+                  - generic:
+                    - button: Text
+                    - button: Image
+                  - generic: Streams token-by-token via queue + worker.
+                - generic:
+                  - textbox:
+                    - /placeholder: Your prompt
+                  - button [disabled]: Send
+  - region "Notifications alt+T"
+  - alert
+  - dialog "Sidebar" [active] [ref=e60]:
+    - generic [ref=e61]:
+      - heading "Sidebar" [level=2]
+      - paragraph: Displays the mobile sidebar.
+    - generic [ref=e63]:
+      - link "+ New chat" [ref=e65] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e67]:
+        - generic [ref=e68]: Recent
+        - list [ref=e69]:
+          - listitem [ref=e70]:
+            - link "Verify B. 5 minutes ago" [ref=e71] [cursor=pointer]:
+              - /url: /chat/554fd2ad-5cf1-4104-9f42-d3b41d909006
+              - generic [ref=e72]:
+                - generic [ref=e73]: Verify B.
+                - generic [ref=e74]: 5 minutes ago
+          - listitem [ref=e75]:
+            - link "Verify A. 5 minutes ago" [ref=e76] [cursor=pointer]:
+              - /url: /chat/3cfd9421-c11a-44a7-94fd-738b3c5e035b
+              - generic [ref=e77]:
+                - generic [ref=e78]: Verify A.
+                - generic [ref=e79]: 5 minutes ago
+          - listitem [ref=e80]:
+            - link "First chat after fix. 9 minutes ago" [ref=e81] [cursor=pointer]:
+              - /url: /chat/75d0950e-3c13-48a3-b28c-5d37199b1f08
+              - generic [ref=e82]:
+                - generic [ref=e83]: First chat after fix.
+                - generic [ref=e84]: 9 minutes ago
+          - listitem [ref=e85]:
+            - link "Say hi in one short sentence. 25 minutes ago" [ref=e86] [cursor=pointer]:
+              - /url: /chat/29980aaa-515c-4af7-abbc-7050e8011137
+              - generic [ref=e87]:
+                - generic [ref=e88]: Say hi in one short sentence.
+                - generic [ref=e89]: 25 minutes ago

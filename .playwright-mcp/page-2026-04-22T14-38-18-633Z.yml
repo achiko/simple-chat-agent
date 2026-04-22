@@ -1,0 +1,57 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]: Chat AI Agent
+      - link "Chat" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - link "History" [ref=e6] [cursor=pointer]:
+        - /url: /history
+      - link "Gallery" [ref=e7] [cursor=pointer]:
+        - /url: /gallery
+      - link "System" [ref=e8] [cursor=pointer]:
+        - /url: /system
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e13]:
+          - link "+ New chat" [ref=e15] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e17]:
+            - generic [ref=e18]: Recent
+            - list [ref=e19]:
+              - listitem [ref=e49]:
+                - link "Verify A. less than a minute ago" [ref=e50] [cursor=pointer]:
+                  - /url: /chat/3cfd9421-c11a-44a7-94fd-738b3c5e035b
+                  - generic [ref=e51]:
+                    - generic [ref=e52]: Verify A.
+                    - generic [ref=e53]: less than a minute ago
+              - listitem [ref=e39]:
+                - link "First chat after fix. 4 minutes ago" [ref=e40] [cursor=pointer]:
+                  - /url: /chat/75d0950e-3c13-48a3-b28c-5d37199b1f08
+                  - generic [ref=e41]:
+                    - generic [ref=e42]: First chat after fix.
+                    - generic [ref=e43]: 4 minutes ago
+              - listitem [ref=e44]:
+                - link "Say hi in one short sentence. 20 minutes ago" [ref=e45] [cursor=pointer]:
+                  - /url: /chat/29980aaa-515c-4af7-abbc-7050e8011137
+                  - generic [ref=e46]:
+                    - generic [ref=e47]: Say hi in one short sentence.
+                    - generic [ref=e48]: 20 minutes ago
+        - main [ref=e21]:
+          - generic [ref=e22]:
+            - button "Toggle Sidebar" [ref=e23]:
+              - img
+              - generic [ref=e24]: Toggle Sidebar
+            - generic [ref=e25]: Chat history
+          - generic [ref=e27]:
+            - generic [ref=e69]: Ask anything. Switch to Image to generate a picture.
+            - generic [ref=e30]:
+              - generic [ref=e31]:
+                - generic [ref=e32]:
+                  - button "Text" [ref=e33]
+                  - button "Image" [ref=e34]
+                - generic [ref=e35]: Streams token-by-token via queue + worker.
+              - generic [ref=e36]:
+                - textbox "Your prompt" [ref=e37]
+                - button "Send" [disabled]
+  - region "Notifications alt+T"
+  - alert [ref=e38]

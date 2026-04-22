@@ -1,0 +1,55 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]: Chat AI Agent
+      - link "Chat" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - link "History" [ref=e6] [cursor=pointer]:
+        - /url: /history
+      - link "Gallery" [ref=e7] [cursor=pointer]:
+        - /url: /gallery
+      - link "System" [ref=e8] [cursor=pointer]:
+        - /url: /system
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e13]:
+          - link "+ New chat" [ref=e15] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e17]:
+            - generic [ref=e18]: Recent
+            - list [ref=e19]:
+              - listitem [ref=e43]:
+                - link "First chat after fix. less than a minute ago" [ref=e44] [cursor=pointer]:
+                  - /url: /chat/75d0950e-3c13-48a3-b28c-5d37199b1f08
+                  - generic [ref=e45]:
+                    - generic [ref=e46]: First chat after fix.
+                    - generic [ref=e47]: less than a minute ago
+              - listitem [ref=e20]:
+                - link "Say hi in one short sentence. 15 minutes ago" [ref=e21] [cursor=pointer]:
+                  - /url: /chat/29980aaa-515c-4af7-abbc-7050e8011137
+                  - generic [ref=e22]:
+                    - generic [ref=e23]: Say hi in one short sentence.
+                    - generic [ref=e24]: 15 minutes ago
+        - main [ref=e25]:
+          - generic [ref=e26]:
+            - button "Toggle Sidebar" [ref=e27]:
+              - img
+              - generic [ref=e28]: Toggle Sidebar
+            - generic [ref=e29]: Chat history
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e51]: First chat after fix.
+              - generic [ref=e52]:
+                - generic [ref=e53]: "Welcome back! Looks like everything’s running on my side. Want to do a quick test? You can: - Ask any question - Paste a paragraph to summarize - Request a short email/message draft - Ask for a tiny code snippet - Upload an image for a quick description How would you like to test?"
+                - generic [ref=e62]: in 11 · out 482 · total 493 · $0.00483
+            - generic [ref=e54]:
+              - generic [ref=e55]:
+                - generic [ref=e56]:
+                  - button "Text" [ref=e57]
+                  - button "Image" [ref=e58]
+                - generic [ref=e59]: Streams token-by-token via queue + worker.
+              - generic [ref=e60]:
+                - textbox "Your prompt" [ref=e61]
+                - button "Send" [disabled]
+  - region "Notifications alt+T"
+  - alert [ref=e42]

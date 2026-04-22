@@ -15,6 +15,13 @@
       "when": 1776857396688,
       "tag": "0001_omniscient_stark_industries",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776863922604,
+      "tag": "0002_chemical_iron_lad",
+      "breakpoints": true
     }
   ]
 }

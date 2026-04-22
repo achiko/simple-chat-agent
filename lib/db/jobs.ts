@@ -30,6 +30,7 @@ export async function createJob(input: {
   prompt: string;
   type: JobType;
   model?: string | null;
+  sessionId?: string | null;
 }): Promise<Job> {
   const [row] = await db()
     .insert(jobs)
@@ -38,6 +39,7 @@ export async function createJob(input: {
       prompt: input.prompt,
       type: input.type,
       model: input.model ?? null,
+      sessionId: input.sessionId ?? null,
       status: "PENDING",
     })
     .returning();
@@ -127,6 +129,7 @@ export type ListJobsFilter = {
   userId?: string;
   type?: JobType;
   status?: JobStatus;
+  sessionId?: string;
   limit?: number;
   offset?: number;
 };
@@ -136,6 +139,7 @@ export async function listJobs(filter: ListJobsFilter = {}): Promise<Job[]> {
   if (filter.userId) clauses.push(eq(jobs.userId, filter.userId));
   if (filter.type) clauses.push(eq(jobs.type, filter.type));
   if (filter.status) clauses.push(eq(jobs.status, filter.status));
+  if (filter.sessionId) clauses.push(eq(jobs.sessionId, filter.sessionId));
   const where = clauses.length > 0 ? and(...clauses) : undefined;
   return await db()
     .select()

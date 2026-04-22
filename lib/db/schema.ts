@@ -2,6 +2,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import {
   boolean,
   foreignKey,
+  index,
   integer,
   json,
   numeric,
@@ -151,25 +152,60 @@ export const JOB_STATUSES = [
 ] as const;
 export type JobStatus = (typeof JOB_STATUSES)[number];
 
-export const jobs = pgTable("Job", {
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  userId: uuid("userId")
-    .notNull()
-    .references(() => user.id),
-  prompt: text("prompt").notNull(),
-  type: varchar("type", { enum: JOB_TYPES }).notNull(),
-  status: varchar("status", { enum: JOB_STATUSES }).notNull().default("PENDING"),
-  model: text("model"),
-  inputTokens: integer("inputTokens"),
-  outputTokens: integer("outputTokens"),
-  totalTokens: integer("totalTokens"),
-  estimatedCost: numeric("estimatedCost", { precision: 12, scale: 6 }),
-  error: text("error"),
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-  startedAt: timestamp("startedAt"),
-  completedAt: timestamp("completedAt"),
-});
+export const chatSession = pgTable(
+  "ChatSession",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    title: text("title").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    userUpdatedIdx: index("ChatSession_userId_updatedAt_idx").on(
+      table.userId,
+      table.updatedAt
+    ),
+  })
+);
+
+export type ChatSession = InferSelectModel<typeof chatSession>;
+
+export const jobs = pgTable(
+  "Job",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    sessionId: uuid("sessionId").references(() => chatSession.id, {
+      onDelete: "set null",
+    }),
+    prompt: text("prompt").notNull(),
+    type: varchar("type", { enum: JOB_TYPES }).notNull(),
+    status: varchar("status", { enum: JOB_STATUSES })
+      .notNull()
+      .default("PENDING"),
+    model: text("model"),
+    inputTokens: integer("inputTokens"),
+    outputTokens: integer("outputTokens"),
+    totalTokens: integer("totalTokens"),
+    estimatedCost: numeric("estimatedCost", { precision: 12, scale: 6 }),
+    error: text("error"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+    startedAt: timestamp("startedAt"),
+    completedAt: timestamp("completedAt"),
+  },
+  (table) => ({
+    sessionCreatedIdx: index("Job_sessionId_createdAt_idx").on(
+      table.sessionId,
+      table.createdAt
+    ),
+  })
+);
 
 export type Job = InferSelectModel<typeof jobs>;
 

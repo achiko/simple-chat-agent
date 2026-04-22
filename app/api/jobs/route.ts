@@ -3,12 +3,14 @@ import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { createJob, listJobs } from "@/lib/db/jobs";
 import { JOB_STATUSES, JOB_TYPES } from "@/lib/db/schema";
+import { getSession, touchSession } from "@/lib/db/sessions";
 import { enqueueJob } from "@/lib/queue";
 
 const createJobSchema = z.object({
   prompt: z.string().min(1).max(10_000),
   type: z.enum(JOB_TYPES),
   model: z.string().optional(),
+  sessionId: z.string().uuid().optional(),
 });
 
 export async function POST(request: Request) {
@@ -32,12 +34,27 @@ export async function POST(request: Request) {
     );
   }
 
+  if (parsed.data.sessionId) {
+    const owned = await getSession(parsed.data.sessionId);
+    if (!owned) {
+      return NextResponse.json({ error: "session not found" }, { status: 404 });
+    }
+    if (owned.userId !== session.user.id) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+  }
+
   const job = await createJob({
     userId: session.user.id,
     prompt: parsed.data.prompt,
     type: parsed.data.type,
     model: parsed.data.model,
+    sessionId: parsed.data.sessionId,
   });
+
+  if (parsed.data.sessionId) {
+    await touchSession(parsed.data.sessionId);
+  }
 
   await enqueueJob(job.id);
 
@@ -47,6 +64,7 @@ export async function POST(request: Request) {
 const listQuerySchema = z.object({
   type: z.enum(JOB_TYPES).optional(),
   status: z.enum(JOB_STATUSES).optional(),
+  sessionId: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 });
@@ -72,6 +90,7 @@ export async function GET(request: Request) {
     userId: session.user.id,
     type: parsed.data.type,
     status: parsed.data.status,
+    sessionId: parsed.data.sessionId,
     limit: parsed.data.limit,
     offset: parsed.data.offset,
   });

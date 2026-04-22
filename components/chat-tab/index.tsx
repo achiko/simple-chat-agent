@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { Job, JobType } from "@/lib/db/schema";
+import type { ChatSession, Job, JobType } from "@/lib/db/schema";
+import { ThinkingIndicator } from "./thinking-indicator";
 
 type Role = "user" | "assistant";
 type Message = {
@@ -20,18 +22,58 @@ type Message = {
   outputTokens?: number | null;
   totalTokens?: number | null;
   estimatedCost?: number | null;
+  /** Set on assistant messages that correspond to a real DB Job. Used to reconnect in-flight jobs on rehydrate. */
+  jobId?: string;
 };
 
-export function ChatTab() {
-  const [messages, setMessages] = useState<Message[]>([]);
+export type InitialMessage = Message;
+
+const NON_TERMINAL: Job["status"][] = [
+  "PENDING",
+  "QUEUED",
+  "STARTED",
+  "STREAMING",
+];
+
+export function ChatTab({
+  initialSessionId,
+  initialMessages,
+}: {
+  initialSessionId?: string;
+  initialMessages?: InitialMessage[];
+}) {
+  const router = useRouter();
+  const [messages, setMessages] = useState<Message[]>(initialMessages ?? []);
   const [input, setInput] = useState("");
   const [type, setType] = useState<JobType>("TEXT");
   const [busy, setBusy] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const sessionIdRef = useRef<string | null>(initialSessionId ?? null);
+  const creatingSessionRef = useRef<Promise<string> | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Reconnect to any in-flight jobs when loading an existing session.
+  useEffect(() => {
+    if (!initialMessages) return;
+    for (const m of initialMessages) {
+      if (
+        m.role !== "assistant" ||
+        !m.jobId ||
+        !m.status ||
+        !NON_TERMINAL.includes(m.status)
+      ) {
+        continue;
+      }
+      if (m.type === "TEXT") {
+        void consumeTextStream(m.jobId, m.id, setMessages);
+      } else {
+        void pollForCompletion(m.jobId, m.id, setMessages);
+      }
+    }
+  }, [initialMessages]);
 
   const submit = useCallback(async () => {
     const prompt = input.trim();
@@ -47,17 +89,60 @@ export function ChatTab() {
     setInput("");
     setBusy(true);
 
+    const firstPrompt = !sessionIdRef.current;
     try {
+      // Lazily create a session on the very first prompt.
+      if (!sessionIdRef.current) {
+        if (!creatingSessionRef.current) {
+          creatingSessionRef.current = (async () => {
+            const res = await fetch("/api/sessions", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ firstPrompt: prompt }),
+            });
+            if (!res.ok) {
+              const payload = await res.json().catch(() => ({}));
+              throw new Error(payload?.error ?? `HTTP ${res.status}`);
+            }
+            const { session } = (await res.json()) as {
+              session: ChatSession;
+            };
+            return session.id;
+          })();
+        }
+        const id = await creatingSessionRef.current;
+        sessionIdRef.current = id;
+        creatingSessionRef.current = null;
+      }
+
       const res = await fetch("/api/jobs", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt, type }),
+        body: JSON.stringify({
+          prompt,
+          type,
+          sessionId: sessionIdRef.current,
+        }),
       });
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}));
         throw new Error(payload?.error ?? `HTTP ${res.status}`);
       }
       const { job } = (await res.json()) as { job: Job };
+
+      // On the first prompt of a new session, hand off to the canonical
+      // /chat/[sessionId] route. The server component rehydrates the
+      // just-inserted job, and the reconnect-on-mount effect re-opens SSE
+      // (stream replays any chunks already persisted). Clear the optimistic
+      // user bubble first — next.config `cachedNavigations: true` would
+      // otherwise preserve it on the "/" route cache and bleed back on
+      // "+ New chat".
+      if (firstPrompt) {
+        setMessages([]);
+        router.replace(`/chat/${sessionIdRef.current}`);
+        return;
+      }
+
       const assistantId = crypto.randomUUID();
       setMessages((prev) => [
         ...prev,
@@ -67,6 +152,7 @@ export function ChatTab() {
           type: job.type,
           text: "",
           status: job.status,
+          jobId: job.id,
         },
       ]);
 
@@ -81,10 +167,10 @@ export function ChatTab() {
     } finally {
       setBusy(false);
     }
-  }, [busy, input, type]);
+  }, [busy, input, router, type]);
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-3.25rem)] w-full max-w-3xl flex-col px-4">
+    <div className="mx-auto flex h-[calc(100dvh-3.25rem-2.25rem)] w-full max-w-3xl flex-col px-4">
       <div className="flex-1 space-y-4 overflow-y-auto py-6">
         {messages.length === 0 ? (
           <div className="pt-20 text-center text-muted-foreground">
@@ -160,7 +246,19 @@ function TypeToggle({
 }
 
 function MessageBubble({ message }: { message: Message }) {
+  const isAssistant = message.role === "assistant";
   const failed = message.status === "FAILED";
+  const isWorking =
+    isAssistant &&
+    !message.text &&
+    !message.image &&
+    !!message.status &&
+    (NON_TERMINAL.includes(message.status) || message.status === "PENDING");
+
+  if (isWorking) {
+    return <ThinkingIndicator type={message.type} />;
+  }
+
   const base =
     message.role === "user"
       ? "ml-auto bg-primary text-primary-foreground"
@@ -177,9 +275,7 @@ function MessageBubble({ message }: { message: Message }) {
           className="max-w-full rounded"
         />
       ) : null}
-      <div className="whitespace-pre-wrap">
-        {message.text || (message.status === "STREAMING" ? "…" : "")}
-      </div>
+      <div className="whitespace-pre-wrap">{message.text}</div>
       {message.error ? (
         <div className="mt-1 text-xs">{message.error}</div>
       ) : null}

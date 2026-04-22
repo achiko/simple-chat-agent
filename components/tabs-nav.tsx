@@ -15,10 +15,12 @@ export function TabsNav() {
   const pathname = usePathname();
   return (
     <nav className="sticky top-0 z-10 flex items-center gap-1 border-b bg-background/90 px-4 py-2 backdrop-blur">
-      <div className="mr-4 font-semibold">Chat UI</div>
+      <div className="mr-4 font-semibold">Chat AI Agent</div>
       {TABS.map((tab) => {
         const active =
-          tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
+          tab.href === "/"
+            ? pathname === "/" || pathname.startsWith("/chat/")
+            : pathname.startsWith(tab.href);
         return (
           <Link
             key={tab.href}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { TabsNav } from "@/components/tabs-nav";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -10,8 +11,8 @@ import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chat.vercel.ai"),
-  title: "Next.js Chatbot Template",
-  description: "Next.js chatbot template using the AI SDK.",
+  title: "Chat AI Agent",
+  description: "AI chat agent with queued workers and dashboards.",
 };
 
 export const viewport = {
@@ -81,7 +82,9 @@ export default function RootLayout({
           >
             <TooltipProvider>
               <div className="flex min-h-dvh flex-col">
-                <TabsNav />
+                <Suspense fallback={<div className="h-[3.25rem] border-b" />}>
+                  <TabsNav />
+                </Suspense>
                 <main className="flex-1">{children}</main>
               </div>
               <Toaster position="top-center" theme="system" />

@@ -25,6 +25,7 @@ playwright/.cache/
 /playwright-report/
 /blob-report/
 /playwright/*
+.playwright-cli/
 
 # Logs
 *.log

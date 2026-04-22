@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import useSWR from "swr";
+import { JobRow } from "@/components/job-row";
+import type { Job } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -12,10 +15,21 @@ type Stats = {
   logs: Array<{ ts?: string; level?: string; message?: string; raw?: string }>;
 };
 
+type Filter = "COMPLETED" | "FAILED" | null;
+
 export function SystemTab() {
   const { data, isLoading } = useSWR<Stats>("/api/system/stats", fetcher, {
     refreshInterval: 2000,
   });
+  const [filter, setFilter] = useState<Filter>(null);
+  const { data: jobsData, isLoading: jobsLoading } = useSWR<{ jobs: Job[] }>(
+    filter ? `/api/jobs?status=${filter}&limit=50` : null,
+    fetcher,
+    { refreshInterval: 5000 }
+  );
+  const toggle = (next: Exclude<Filter, null>) =>
+    setFilter((cur) => (cur === next ? null : next));
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
       <h1 className="text-lg font-semibold">System</h1>
@@ -27,11 +41,19 @@ export function SystemTab() {
           <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <StatCard label="Waiting" value={data.queue.waiting ?? 0} />
             <StatCard label="Active" value={data.queue.active ?? 0} />
-            <StatCard label="Completed" value={data.queue.completed ?? 0} />
+            <StatCard
+              label="Completed"
+              value={data.queue.completed ?? 0}
+              selected={filter === "COMPLETED"}
+              tone="success"
+              onClick={() => toggle("COMPLETED")}
+            />
             <StatCard
               label="Failed"
               value={data.queue.failed ?? 0}
-              tone={data.queue.failed ? "destructive" : undefined}
+              selected={filter === "FAILED"}
+              tone="destructive"
+              onClick={() => toggle("FAILED")}
             />
             <StatCard label="Streams" value={data.streams.active} />
           </section>
@@ -60,6 +82,40 @@ export function SystemTab() {
               ) : null}
             </div>
           </section>
+          {filter ? (
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold">
+                  {filter === "COMPLETED" ? "Completed" : "Failed"} jobs
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setFilter(null)}
+                  className="rounded-md border px-2 py-1 text-xs hover:bg-muted"
+                >
+                  Clear filter
+                </button>
+              </div>
+              {jobsLoading && !jobsData ? (
+                <div className="text-muted-foreground text-sm">Loading…</div>
+              ) : null}
+              <div className="space-y-2">
+                {jobsData?.jobs.map((job) => (
+                  <JobRow job={job} key={job.id} />
+                ))}
+                {jobsData && jobsData.jobs.length === 0 ? (
+                  <div className="text-muted-foreground text-sm">
+                    No {filter.toLowerCase()} jobs.
+                  </div>
+                ) : null}
+              </div>
+              {jobsData && jobsData.jobs.length >= 50 ? (
+                <div className="text-xs text-muted-foreground">
+                  Showing latest 50. See the History tab for the full list.
+                </div>
+              ) : null}
+            </section>
+          ) : null}
           <section className="rounded-md border">
             <div className="border-b px-3 py-2 text-sm font-medium">
               Recent log events
@@ -113,18 +169,44 @@ function StatCard({
   label,
   value,
   tone,
+  selected,
+  onClick,
 }: {
   label: string;
   value: number;
-  tone?: "destructive";
+  tone?: "destructive" | "success";
+  selected?: boolean;
+  onClick?: () => void;
 }) {
+  const clickable = !!onClick;
+  const destructive = tone === "destructive" && value > 0;
+  const base = cn(
+    "rounded-md border p-3 text-left transition-colors",
+    destructive ? "border-destructive/40 bg-destructive/5" : "",
+    clickable
+      ? "cursor-pointer hover:bg-muted focus:outline-none focus-visible:ring-2"
+      : "",
+    selected && tone === "success" ? "ring-2 ring-green-500" : "",
+    selected && tone === "destructive" ? "ring-2 ring-destructive" : ""
+  );
+  if (clickable) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={selected}
+        className={base}
+      >
+        <div className="text-xs text-muted-foreground">
+          {label}
+          {selected ? " · filtering" : ""}
+        </div>
+        <div className="text-2xl font-semibold">{value}</div>
+      </button>
+    );
+  }
   return (
-    <div
-      className={cn(
-        "rounded-md border p-3",
-        tone === "destructive" ? "border-destructive/40 bg-destructive/5" : ""
-      )}
-    >
+    <div className={base}>
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="text-2xl font-semibold">{value}</div>
     </div>

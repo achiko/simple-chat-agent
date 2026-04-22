@@ -1,5 +1,5 @@
 import { ChatTab } from "@/components/chat-tab";
 
 export default function Page() {
-  return <ChatTab />;
+  return <ChatTab key="new" />;
 }

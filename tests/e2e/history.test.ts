@@ -1,11 +1,11 @@
 import { expect, test } from "../fixtures";
 
 test.describe("History tab", () => {
-  test("shows completed jobs with prompt + status", async ({ page, request }) => {
+  test("shows completed jobs with prompt + status", async ({ page }) => {
     // Prime a guest session by visiting root.
     await page.goto("/");
-    // Enqueue a job directly via the API.
-    const res = await request.post("/api/jobs", {
+    // Enqueue a job via the API, sharing the browser's cookie jar.
+    const res = await page.request.post("/api/jobs", {
       data: { prompt: "Say 'history test' and nothing else.", type: "TEXT" },
     });
     expect(res.ok()).toBe(true);

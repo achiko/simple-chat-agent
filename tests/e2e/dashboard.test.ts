@@ -3,7 +3,6 @@ import { expect, test } from "../fixtures";
 test.describe("System dashboard", () => {
   test("worker reports online and queue counts update as jobs are enqueued", async ({
     page,
-    request,
   }) => {
     await page.goto("/");
     await page.goto("/system");
@@ -14,9 +13,9 @@ test.describe("System dashboard", () => {
     // Baseline counts.
     const countBefore = await readCompleted(page);
 
-    // Enqueue 3 text jobs via the API.
+    // Enqueue 3 text jobs via the API, sharing the browser's cookie jar.
     for (let i = 0; i < 3; i++) {
-      const res = await request.post("/api/jobs", {
+      const res = await page.request.post("/api/jobs", {
         data: { prompt: `dashboard probe ${i}`, type: "TEXT" },
       });
       expect(res.ok()).toBe(true);

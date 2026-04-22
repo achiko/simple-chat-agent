@@ -1,71 +1,193 @@
-<a href="https://chatbot.ai-sdk.dev/demo">
-  <img alt="Chatbot" src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Chatbot</h1>
-</a>
+# Chat UI
 
-<p align="center">
-    Chatbot (formerly AI Chatbot) is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
-</p>
+Full-stack AI chat agent with a queued worker pipeline, token-by-token streaming, image generation, persistent history, and a live observability dashboard. Forked from the [Vercel Chatbot template](https://github.com/vercel/chatbot) and extended with the queue + worker + dashboard architecture described in [`docs/action-plan.md`](./docs/action-plan.md).
 
-<p align="center">
-  <a href="https://chatbot.ai-sdk.dev/docs"><strong>Read Docs</strong></a> ·
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
-</p>
-<br/>
+![Chat UI screenshot](public/screenshot.png)
 
-## Features
+## What it does
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://ai-sdk.dev/docs/introduction)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports OpenAI, Anthropic, Google, xAI, and other model providers via AI Gateway
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+Every prompt — Text or Image — becomes a durable **Job** row in Postgres, is enqueued into **BullMQ**, and is executed by a separate **worker** process that calls OpenAI via the AI SDK. Text tokens stream back over **Redis Pub/Sub** to an SSE endpoint, with reconnect-safe replay from a persisted Redis list; images are returned as base64 data URLs. Every completed job carries real token counts and USD cost, written atomically, and a System tab surfaces queue depth, worker heartbeat, active streams, and a live log tail.
 
-## Model Providers
+```
+┌────────┐  POST /api/jobs                    ┌──────────┐        ┌──────────┐
+│ Client │ ─────────────────────────────────▶ │ Next.js  │ ─────▶ │  Redis   │
+│        │                                    │  app     │        │ (BullMQ +│
+│        │  GET /api/jobs/:id/stream  (SSE)   │          │        │  Pub/Sub)│
+│        │ ◀──────── delta / done ──────────  │          │        └────┬─────┘
+└────────┘                                    └────┬─────┘             │
+                                                   │                   ▼
+                                              Postgres            ┌──────────┐
+                                              (Job, Result) ◀──── │  Worker  │ ──▶ OpenAI
+                                                                  └──────────┘     (gpt-5 /
+                                                                                    gpt-image-1)
+```
 
-This template uses the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) to access multiple AI models through a unified interface. Models are configured in `lib/ai/models.ts` with per-model provider routing. Included models: Mistral, Moonshot, DeepSeek, OpenAI, and xAI.
+## Tech stack
 
-### AI Gateway Authentication
+| Layer              | Choice                                                                |
+| ------------------ | --------------------------------------------------------------------- |
+| Framework          | Next.js 16 (App Router, Cache Components) + TypeScript                |
+| UI                 | Tailwind 4 + shadcn/ui + Radix + sonner + SWR                         |
+| ORM / DB           | Drizzle + PostgreSQL 16                                               |
+| Queue / Pub/Sub    | BullMQ + Redis 7 (one Redis for queue, pub/sub, heartbeat, log tail)  |
+| AI                 | AI SDK v6 + `@ai-sdk/openai` (`gpt-5` text, `gpt-image-1` images)     |
+| Auth               | Auth.js (next-auth 5 beta) — guest mode only                          |
+| Tests              | Playwright                                                            |
+| Orchestration      | Single Dockerfile + `docker-compose.yml` (postgres, redis, migrate, app, worker) |
 
-**For Vercel deployments**: Authentication is handled automatically via OIDC tokens.
+## Tabs
 
-**For non-Vercel deployments**: You need to provide an AI Gateway API key by setting the `AI_GATEWAY_API_KEY` environment variable in your `.env.local` file.
+| Tab     | Route       | What it does                                                     |
+| ------- | ----------- | ---------------------------------------------------------------- |
+| Chat    | `/`         | Text \| Image composer. Text streams via SSE; Image polls.       |
+| History | `/history`  | Reverse-chrono job list with filters; failed jobs in red.        |
+| Gallery | `/gallery`  | Grid of completed image jobs with prompt + cost.                 |
+| System  | `/system`   | Queue depth, worker heartbeat, active streams, live log tail.    |
 
-With the [AI SDK](https://ai-sdk.dev/docs/introduction), you can also switch to direct LLM providers like [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://ai-sdk.dev/providers/ai-sdk-providers) with just a few lines of code.
+## Quick start (Docker)
 
-## Deploy Your Own
+Requires Docker Desktop and an OpenAI API key.
 
-You can deploy your own version of Chatbot to Vercel with one click:
+```bash
+# 1. Copy the env template and fill in secrets
+cp .env.example .env.local
+#    Set at least:
+#      AUTH_SECRET=$(openssl rand -base64 32)
+#      OPENAI_API_KEY=sk-...
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/templates/next.js/chatbot)
+# 2. Bring up the whole stack (postgres, redis, migrate, app, worker)
+docker compose up -d
 
-## Running locally
+# 3. Open the app
+open http://localhost:3000
+```
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+First `docker compose up` builds the `chat-ui-app:local` image and runs migrations via a one-shot `migrate` service. Subsequent runs reuse the image and skip migrations if already applied.
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
+### Useful Docker commands
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+```bash
+docker compose ps                        # service status
+docker compose logs -f app worker        # tail logs
+docker compose restart worker            # restart just the worker
+docker compose down                      # stop, keep data
+docker compose down -v                   # stop + wipe postgres + redis volumes
+docker compose build migrate             # rebuild the shared image after code changes
+docker compose up -d --force-recreate app worker
+```
+
+## Local development (without Docker)
+
+Requires Node 20+, pnpm 10.32.1 (`corepack prepare pnpm@10.32.1 --activate`), and a reachable Postgres + Redis.
 
 ```bash
 pnpm install
-pnpm db:migrate # Setup database or apply latest database changes
-pnpm dev
+
+# Boot just the stateful services
+docker compose up -d postgres redis
+pnpm db:migrate
+
+# Two terminals
+pnpm dev                                 # Next.js on :3000
+pnpm exec tsx worker/index.ts            # worker
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000).
+`.env.local` is auto-loaded by both Next.js and the worker (`worker/index.ts` calls dotenv at the top, because `tsx` doesn't read env files on its own).
+
+## Environment variables
+
+Copy `.env.example` → `.env.local`. Required ones are marked **yes**.
+
+| Variable                        | Required | Used by         | Default / notes                         |
+| ------------------------------- | -------- | --------------- | --------------------------------------- |
+| `AUTH_SECRET`                   | **yes**  | Next (NextAuth) | 32-byte random                          |
+| `OPENAI_API_KEY`                | **yes**  | worker          | gpt-5 + gpt-image-1                     |
+| `POSTGRES_URL`                  | **yes**  | all DB callers  | compose overrides to internal hostname  |
+| `REDIS_URL`                     | **yes**  | app + worker    | compose overrides to internal hostname  |
+| `AI_GATEWAY_API_KEY`            | no       | template        | unused on hot path                      |
+| `BLOB_READ_WRITE_TOKEN`         | no       | template        | unused                                  |
+| `GPT5_INPUT_PRICE_PER_1M`       | no       | pricing         | 1.25                                    |
+| `GPT5_OUTPUT_PRICE_PER_1M`      | no       | pricing         | 10                                      |
+| `GPT_IMAGE_1_PRICE_PER_IMAGE`   | no       | pricing         | 0.04                                    |
+| `OPENAI_TEXT_MODEL`             | no       | worker          | `gpt-5`                                 |
+| `OPENAI_IMAGE_MODEL`            | no       | worker          | `gpt-image-1`                           |
+| `OPENAI_IMAGE_SIZE`             | no       | worker          | `1024x1024`                             |
+| `WORKER_CONCURRENCY`            | no       | worker          | 4                                       |
+
+## Testing
+
+Playwright E2E specs live under [`tests/e2e/`](./tests/e2e/). They drive the whole stack and require a running app + worker + DB + Redis + a working `OPENAI_API_KEY`.
+
+```bash
+docker compose up -d                     # full stack
+pnpm test                                # all specs
+pnpm exec playwright test tests/e2e/chat.test.ts --headed
+pnpm exec playwright show-report         # open the last HTML report
+```
+
+Specs:
+
+- `chat.test.ts` — submit a text prompt, assert streaming deltas + final tokens + cost render.
+- `image.test.ts` — submit an image prompt, wait for the generated image to appear, then verify it shows in the Gallery.
+- `history.test.ts` — enqueue via API, assert the row appears and reaches a terminal state.
+- `dashboard.test.ts` — enqueue N jobs, assert the System tab's Completed counter strictly increases.
+
+## HTTP API
+
+| Method | Route                          | Purpose                                      |
+| ------ | ------------------------------ | -------------------------------------------- |
+| POST   | `/api/jobs`                    | Create + enqueue a job (zod-validated).      |
+| GET    | `/api/jobs`                    | Paginated list; filter by `type` / `status`. |
+| GET    | `/api/jobs/:id`                | Job row + result output.                     |
+| GET    | `/api/jobs/:id/stream`         | SSE: replay + live deltas for TEXT jobs.     |
+| GET    | `/api/system/stats`            | Dashboard feed.                              |
+
+Full request/response shapes in [`docs/api.md`](./docs/api.md).
+
+## Project layout
+
+```
+chat-ui/
+├── app/
+│   ├── layout.tsx                ← root layout with TabsNav + providers
+│   ├── page.tsx                  ← Chat tab
+│   ├── history/, gallery/, system/page.tsx
+│   └── api/jobs, api/system/stats, (auth)/, (chat)/
+├── components/
+│   ├── tabs-nav.tsx
+│   ├── chat-tab/, history-tab/, gallery-tab/, system-tab/
+│   └── ui/                       ← shadcn primitives
+├── lib/
+│   ├── db/schema.ts              ← Job + Result + template tables
+│   ├── db/jobs.ts                ← helpers shared by Next AND worker
+│   ├── queue.ts                  ← BullMQ queue, Redis keys, channel helpers
+│   ├── pricing.ts                ← env-driven per-token + per-image prices
+│   └── system/metrics.ts         ← in-memory active-stream counter
+├── worker/
+│   ├── index.ts                  ← BullMQ Worker, concurrency 4, retry 3
+│   ├── heartbeat.ts, log.ts
+│   └── processors/{text,image}.ts
+├── tests/e2e/                    ← Playwright specs
+├── docs/                         ← detailed per-component specs
+├── scripts/screenshot.ts         ← README screenshot capture
+├── Dockerfile                    ← one image, three services
+├── docker-compose.yml
+└── .env.example
+```
+
+## Documentation
+
+Per-component specs live under [`docs/`](./docs/). Each ends with a "Realises" section tying it back to the PRD and action plan.
+
+- [`CLAUDE.md`](./CLAUDE.md) — entrypoint, directory map, commands, conventions.
+- [`docs/architecture.md`](./docs/architecture.md) — system overview, request flows, design decisions.
+- [`docs/postgres.md`](./docs/postgres.md) — schema, migrations, Drizzle gotchas.
+- [`docs/redis.md`](./docs/redis.md) — queue + pub/sub + heartbeat + log tail.
+- [`docs/worker.md`](./docs/worker.md) — processors, retries, observability.
+- [`docs/api.md`](./docs/api.md) — route-by-route reference.
+- [`docs/ui.md`](./docs/ui.md) — tab structure and components.
+- [`docs/auth.md`](./docs/auth.md) — guest flow and the secureCookie HTTP fix.
+- [`docs/docker.md`](./docs/docker.md) — image and compose topology.
+- [`docs/testing.md`](./docs/testing.md) — Playwright setup.
+- [`docs/action-plan.md`](./docs/action-plan.md) — original phased build plan.
+- [`prd-draft.md`](./prd-draft.md) — product requirements.

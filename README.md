@@ -4,6 +4,39 @@ Full-stack AI chat agent with a queued worker pipeline, token-by-token streaming
 
 ![Chat UI screenshot](public/screenshot.png)
 
+
+## Quick start (Docker)
+
+Requires Docker Desktop and an OpenAI API key.
+
+```bash
+# 1. Copy the env template and fill in secrets
+cp .env.example .env.local
+#    Set at least:
+#      AUTH_SECRET=$(openssl rand -base64 32)
+#      OPENAI_API_KEY=sk-...
+
+# 2. Bring up the whole stack (postgres, redis, migrate, app, worker)
+docker compose up -d
+
+# 3. Open the app
+open http://localhost:3000
+```
+
+First `docker compose up` builds the `chat-ui-app:local` image and runs migrations via a one-shot `migrate` service. Subsequent runs reuse the image and skip migrations if already applied.
+
+### Useful Docker commands
+
+```bash
+docker compose ps                        # service status
+docker compose logs -f app worker        # tail logs
+docker compose restart worker            # restart just the worker
+docker compose down                      # stop, keep data
+docker compose down -v                   # stop + wipe postgres + redis volumes
+docker compose build migrate             # rebuild the shared image after code changes
+docker compose up -d --force-recreate app worker
+```
+
 ## What it does
 
 Every prompt — Text or Image — becomes a durable **Job** row in Postgres, is enqueued into **BullMQ**, and is executed by a separate **worker** process that calls OpenAI via the AI SDK. Text tokens stream back over **Redis Pub/Sub** to an SSE endpoint, with reconnect-safe replay from a persisted Redis list; images are returned as base64 data URLs. Every completed job carries real token counts and USD cost, written atomically, and a System tab surfaces queue depth, worker heartbeat, active streams, and a live log tail.
@@ -44,37 +77,7 @@ Every prompt — Text or Image — becomes a durable **Job** row in Postgres, is
 | Gallery | `/gallery`  | Grid of completed image jobs with prompt + cost.                 |
 | System  | `/system`   | Queue depth, worker heartbeat, active streams, live log tail.    |
 
-## Quick start (Docker)
 
-Requires Docker Desktop and an OpenAI API key.
-
-```bash
-# 1. Copy the env template and fill in secrets
-cp .env.example .env.local
-#    Set at least:
-#      AUTH_SECRET=$(openssl rand -base64 32)
-#      OPENAI_API_KEY=sk-...
-
-# 2. Bring up the whole stack (postgres, redis, migrate, app, worker)
-docker compose up -d
-
-# 3. Open the app
-open http://localhost:3000
-```
-
-First `docker compose up` builds the `chat-ui-app:local` image and runs migrations via a one-shot `migrate` service. Subsequent runs reuse the image and skip migrations if already applied.
-
-### Useful Docker commands
-
-```bash
-docker compose ps                        # service status
-docker compose logs -f app worker        # tail logs
-docker compose restart worker            # restart just the worker
-docker compose down                      # stop, keep data
-docker compose down -v                   # stop + wipe postgres + redis volumes
-docker compose build migrate             # rebuild the shared image after code changes
-docker compose up -d --force-recreate app worker
-```
 
 ## Local development (without Docker)
 

@@ -1,0 +1,70 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Chat AI Agent
+          - button "Toggle Sidebar" [ref=e9]:
+            - img
+            - generic [ref=e10]: Toggle Sidebar
+        - link "+ New chat" [ref=e11] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e12]:
+        - list [ref=e14]:
+          - listitem [ref=e15]:
+            - link "Chat" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e17]: Chat
+          - listitem [ref=e18]:
+            - link "History" [ref=e19] [cursor=pointer]:
+              - /url: /history
+              - generic [ref=e20]: History
+          - listitem [ref=e21]:
+            - link "Gallery" [ref=e22] [cursor=pointer]:
+              - /url: /gallery
+              - generic [ref=e23]: Gallery
+          - listitem [ref=e24]:
+            - link "System" [ref=e25] [cursor=pointer]:
+              - /url: /system
+              - generic [ref=e26]: System
+        - generic [ref=e27]:
+          - generic [ref=e28]: Recent
+          - list [ref=e29]:
+            - listitem [ref=e55]:
+              - link "Hello again. less than a minute ago" [ref=e56] [cursor=pointer]:
+                - /url: /chat/e5c0de55-880d-46c4-92d3-38f38b2d36d1
+                - generic [ref=e57]:
+                  - generic [ref=e58]: Hello again.
+                  - generic [ref=e59]: less than a minute ago
+            - listitem [ref=e44]:
+              - link "Hello, quick test. 5 minutes ago" [ref=e60] [cursor=pointer]:
+                - /url: /chat/d179b3de-eeeb-4d3c-ae64-44c7e9dd03f0
+                - generic [ref=e46]:
+                  - generic [ref=e47]: Hello, quick test.
+                  - generic [ref=e48]: 5 minutes ago
+            - listitem [ref=e49]:
+              - 'link "Test 2: verify FK error repeats. about 1 hour ago" [ref=e50] [cursor=pointer]':
+                - /url: /chat/036d6a84-ddd9-4926-98d2-cebddb8566f8
+                - generic [ref=e51]:
+                  - generic [ref=e52]: "Test 2: verify FK error repeats."
+                  - generic [ref=e53]: about 1 hour ago
+    - main [ref=e31]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - generic [ref=e64]: Hello again.
+          - alert [ref=e66]:
+            - generic [ref=e67]: Something went wrong on the server.
+            - generic [ref=e68]: Try again in a moment.
+            - group [ref=e69]:
+              - generic "Details" [ref=e70] [cursor=pointer]
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - button "Text" [ref=e74]
+              - button "Image" [ref=e75]
+            - generic [ref=e76]: Streams token-by-token via queue + worker.
+          - generic [ref=e77]:
+            - textbox "Your prompt" [ref=e78]
+            - button "Send" [disabled]
+  - region "Notifications alt+T"
+  - alert [ref=e43]

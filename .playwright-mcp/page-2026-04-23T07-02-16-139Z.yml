@@ -1,0 +1,76 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Chat AI Agent
+          - button "Toggle Sidebar" [ref=e9]:
+            - img
+            - generic [ref=e10]: Toggle Sidebar
+        - link "+ New chat" [ref=e11] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e12]:
+        - list [ref=e14]:
+          - listitem [ref=e15]:
+            - link "Chat" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e17]: Chat
+          - listitem [ref=e18]:
+            - link "History" [ref=e19] [cursor=pointer]:
+              - /url: /history
+              - generic [ref=e20]: History
+          - listitem [ref=e21]:
+            - link "Gallery" [ref=e22] [cursor=pointer]:
+              - /url: /gallery
+              - generic [ref=e23]: Gallery
+          - listitem [ref=e24]:
+            - link "System" [ref=e25] [cursor=pointer]:
+              - /url: /system
+              - generic [ref=e26]: System
+        - generic [ref=e27]:
+          - generic [ref=e28]: Recent
+          - list [ref=e29]:
+            - listitem [ref=e59]:
+              - link "Another quick test less than a minute ago" [ref=e60] [cursor=pointer]:
+                - /url: /chat/6318fcdc-89ca-40cc-b213-7ede61689ec8
+                - generic [ref=e61]:
+                  - generic [ref=e62]: Another quick test
+                  - generic [ref=e63]: less than a minute ago
+            - listitem [ref=e30]:
+              - link "Hello again. 4 minutes ago" [ref=e64] [cursor=pointer]:
+                - /url: /chat/e5c0de55-880d-46c4-92d3-38f38b2d36d1
+                - generic [ref=e32]:
+                  - generic [ref=e33]: Hello again.
+                  - generic [ref=e34]: 4 minutes ago
+            - listitem [ref=e35]:
+              - link "Hello, quick test. 9 minutes ago" [ref=e65] [cursor=pointer]:
+                - /url: /chat/d179b3de-eeeb-4d3c-ae64-44c7e9dd03f0
+                - generic [ref=e37]:
+                  - generic [ref=e38]: Hello, quick test.
+                  - generic [ref=e39]: 9 minutes ago
+            - listitem [ref=e40]:
+              - 'link "Test 2: verify FK error repeats. about 1 hour ago" [ref=e41] [cursor=pointer]':
+                - /url: /chat/036d6a84-ddd9-4926-98d2-cebddb8566f8
+                - generic [ref=e42]:
+                  - generic [ref=e43]: "Test 2: verify FK error repeats."
+                  - generic [ref=e44]: about 1 hour ago
+    - main [ref=e45]:
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e69]: Another quick test
+          - alert [ref=e71]:
+            - generic [ref=e72]: The AI provider isn't configured.
+            - generic [ref=e73]: Set OPENAI_API_KEY in .env.local and restart the worker.
+            - group [ref=e74]:
+              - generic "Details" [ref=e75] [cursor=pointer]
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - generic [ref=e78]:
+              - button "Text" [ref=e79]
+              - button "Image" [ref=e80]
+            - generic [ref=e81]: Streams token-by-token via queue + worker.
+          - generic [ref=e82]:
+            - textbox "Your prompt" [ref=e83]
+            - button "Send" [disabled]
+  - region "Notifications alt+T"
+  - alert [ref=e57]

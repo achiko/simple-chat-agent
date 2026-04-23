@@ -1,0 +1,47 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Chat AI Agent
+          - button "Toggle Sidebar" [ref=e9]:
+            - img
+            - generic [ref=e10]: Toggle Sidebar
+        - link "+ New chat" [ref=e11] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e12]:
+        - list [ref=e14]:
+          - listitem [ref=e15]:
+            - link "Chat" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e17]: Chat
+          - listitem [ref=e18]:
+            - link "History" [ref=e19] [cursor=pointer]:
+              - /url: /history
+              - generic [ref=e20]: History
+          - listitem [ref=e21]:
+            - link "Gallery" [ref=e22] [cursor=pointer]:
+              - /url: /gallery
+              - generic [ref=e23]: Gallery
+          - listitem [ref=e24]:
+            - link "System" [ref=e25] [cursor=pointer]:
+              - /url: /system
+              - generic [ref=e26]: System
+        - generic [ref=e27]:
+          - generic [ref=e28]: Recent
+          - list [ref=e29]:
+            - generic [ref=e44]: No chats yet. Start typing below.
+    - main [ref=e31]:
+      - generic [ref=e32]:
+        - generic [ref=e47]: Say hello in one short sentence.
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - button "Text" [ref=e38]
+              - button "Image" [ref=e39]
+            - generic [ref=e40]: Streams token-by-token via queue + worker.
+          - generic [ref=e41]:
+            - textbox "Your prompt" [ref=e42]
+            - button "Send" [disabled]
+  - region "Notifications alt+T"
+  - alert [ref=e43]

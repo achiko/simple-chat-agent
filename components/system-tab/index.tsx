@@ -3,10 +3,16 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { JobRow } from "@/components/job-row";
+import { ErrorCard } from "@/components/ui/error-card";
+import { notifyError, readApiError, toAppError } from "@/lib/client-errors";
 import type { Job } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw await readApiError(res);
+  return res.json();
+};
 
 type Stats = {
   queue: Record<string, number>;
@@ -18,14 +24,22 @@ type Stats = {
 type Filter = "COMPLETED" | "FAILED" | null;
 
 export function SystemTab() {
-  const { data, isLoading } = useSWR<Stats>("/api/system/stats", fetcher, {
-    refreshInterval: 2000,
-  });
+  const { data, error, isLoading, mutate } = useSWR<Stats>(
+    "/api/system/stats",
+    fetcher,
+    {
+      refreshInterval: 2000,
+      onError: (err) => notifyError(toAppError(err)),
+    }
+  );
   const [filter, setFilter] = useState<Filter>(null);
   const { data: jobsData, isLoading: jobsLoading } = useSWR<{ jobs: Job[] }>(
     filter ? `/api/jobs?status=${filter}&limit=50` : null,
     fetcher,
-    { refreshInterval: 5000 }
+    {
+      refreshInterval: 5000,
+      onError: (err) => notifyError(toAppError(err)),
+    }
   );
   const toggle = (next: Exclude<Filter, null>) =>
     setFilter((cur) => (cur === next ? null : next));
@@ -33,7 +47,13 @@ export function SystemTab() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
       <h1 className="text-lg font-semibold">System</h1>
-      {isLoading && !data ? (
+      {error && !data ? (
+        <ErrorCard
+          error={toAppError(error).payload}
+          action={{ label: "Retry", onClick: () => void mutate() }}
+        />
+      ) : null}
+      {isLoading && !data && !error ? (
         <div className="text-muted-foreground">Loading…</div>
       ) : null}
       {data ? (

@@ -1,24 +1,21 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
+import { ERRORS, withErrorHandler } from "@/lib/api-errors";
 import { getJob } from "@/lib/db/jobs";
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+export const GET = withErrorHandler(
+  async (
+    _request: Request,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const session = await auth();
+    if (!session?.user?.id) throw ERRORS.unauthorized();
 
-  const { id } = await params;
-  const row = await getJob(id);
-  if (!row) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
-  }
-  if (row.job.userId !== session.user.id) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+    const { id } = await params;
+    const row = await getJob(id);
+    if (!row) throw ERRORS.notFound("Job");
+    if (row.job.userId !== session.user.id) throw ERRORS.forbidden();
 
-  return NextResponse.json({ job: row.job, output: row.output });
-}
+    return NextResponse.json({ job: row.job, output: row.output });
+  }
+);

@@ -1,6 +1,21 @@
 import type { Job } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
+function describeError(raw: string | null): string | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      typeof parsed.message === "string"
+    ) {
+      return parsed.message;
+    }
+  } catch {}
+  return raw;
+}
+
 export function JobRow({ job }: { job: Job }) {
   const failed = job.status === "FAILED";
   const completed = job.status === "COMPLETED";
@@ -38,7 +53,9 @@ export function JobRow({ job }: { job: Job }) {
             )}
           </div>
           {job.error ? (
-            <div className="mt-1 text-xs text-destructive">{job.error}</div>
+            <div className="mt-1 text-xs text-destructive">
+              {describeError(job.error)}
+            </div>
           ) : null}
         </div>
         {job.type === "TEXT" ? (

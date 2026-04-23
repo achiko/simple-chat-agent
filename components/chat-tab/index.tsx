@@ -2,9 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ErrorCard } from "@/components/ui/error-card";
 import { Textarea } from "@/components/ui/textarea";
+import type { ErrorPayload } from "@/lib/api-errors";
+import {
+  AppError,
+  ERRORS,
+  notifyError,
+  parseErrorPayload,
+  readApiError,
+  toAppError,
+} from "@/lib/client-errors";
 import type { ChatSession, Job, JobType } from "@/lib/db/schema";
 import { ThinkingIndicator } from "./thinking-indicator";
 
@@ -17,7 +26,7 @@ type Message = {
   /** Image data URL for IMAGE results. */
   image?: string;
   status?: Job["status"];
-  error?: string | null;
+  error?: ErrorPayload | null;
   inputTokens?: number | null;
   outputTokens?: number | null;
   totalTokens?: number | null;
@@ -100,10 +109,7 @@ export function ChatTab({
               headers: { "content-type": "application/json" },
               body: JSON.stringify({ firstPrompt: prompt }),
             });
-            if (!res.ok) {
-              const payload = await res.json().catch(() => ({}));
-              throw new Error(payload?.error ?? `HTTP ${res.status}`);
-            }
+            if (!res.ok) throw await readApiError(res);
             const { session } = (await res.json()) as {
               session: ChatSession;
             };
@@ -124,10 +130,7 @@ export function ChatTab({
           sessionId: sessionIdRef.current,
         }),
       });
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(payload?.error ?? `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw await readApiError(res);
       const { job } = (await res.json()) as { job: Job };
 
       // On the first prompt of a new session, hand off to the canonical
@@ -164,8 +167,11 @@ export function ChatTab({
         await pollForCompletion(job.id, assistantId, setMessages);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      toast.error(`Failed to submit: ${message}`);
+      const appErr = toAppError(err);
+      // Drop the optimistic user bubble so resubmitting after a guest-session
+      // refresh doesn't double-render the prompt.
+      setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+      notifyError(appErr);
     } finally {
       setBusy(false);
     }
@@ -261,12 +267,17 @@ function MessageBubble({ message }: { message: Message }) {
     return <ThinkingIndicator type={message.type} />;
   }
 
+  if (failed && message.error) {
+    return (
+      <div className="max-w-[80%]">
+        <ErrorCard error={message.error} size="sm" />
+      </div>
+    );
+  }
   const base =
     message.role === "user"
       ? "ml-auto bg-primary text-primary-foreground"
-      : failed
-        ? "bg-destructive/10 text-destructive border border-destructive/30"
-        : "bg-muted";
+      : "bg-muted";
   return (
     <div className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${base}`}>
       {message.type === "IMAGE" && message.image ? (
@@ -278,9 +289,6 @@ function MessageBubble({ message }: { message: Message }) {
         />
       ) : null}
       <div className="whitespace-pre-wrap">{message.text}</div>
-      {message.error ? (
-        <div className="mt-1 text-xs">{message.error}</div>
-      ) : null}
       {message.role === "assistant" &&
       (message.totalTokens != null || message.estimatedCost != null) ? (
         <div className="mt-2 text-xs text-muted-foreground">
@@ -307,6 +315,7 @@ async function consumeTextStream(
 ) {
   const url = `/api/jobs/${jobId}/stream`;
   const es = new EventSource(url);
+  let doneReceived = false;
   await new Promise<void>((resolve) => {
     es.addEventListener("delta", (ev) => {
       try {
@@ -321,22 +330,24 @@ async function consumeTextStream(
       } catch {}
     });
     es.addEventListener("done", async (ev) => {
+      doneReceived = true;
       es.close();
       try {
         const payload = JSON.parse((ev as MessageEvent).data) as {
-          error?: string;
+          error?: unknown;
           done?: boolean;
           status?: Job["status"];
         };
-        if (payload.error) {
+        const errorPayload = parseErrorPayload(payload.error);
+        if (errorPayload) {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
-                ? { ...m, status: "FAILED", error: payload.error }
+                ? { ...m, status: "FAILED", error: errorPayload }
                 : m
             )
           );
-          toast.error(payload.error);
+          notifyError(new AppError(0, errorPayload));
         }
       } catch {}
       // Fetch final stats.
@@ -344,13 +355,14 @@ async function consumeTextStream(
         const res = await fetch(`/api/jobs/${jobId}`);
         if (res.ok) {
           const data = (await res.json()) as { job: Job };
+          const errorPayload = parseErrorPayload(data.job.error);
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
                 ? {
                     ...m,
                     status: data.job.status,
-                    error: data.job.error ?? null,
+                    error: errorPayload,
                     inputTokens: data.job.inputTokens,
                     outputTokens: data.job.outputTokens,
                     totalTokens: data.job.totalTokens,
@@ -368,6 +380,31 @@ async function consumeTextStream(
     });
     es.onerror = () => {
       es.close();
+      if (doneReceived) {
+        resolve();
+        return;
+      }
+      const err = ERRORS.streamDisconnected();
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId ? { ...m, status: "FAILED", error: err.payload } : m
+        )
+      );
+      notifyError(err, {
+        action: {
+          label: "Retry",
+          onClick: () => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, status: "STREAMING", error: null }
+                  : m
+              )
+            );
+            void consumeTextStream(jobId, assistantId, setMessages);
+          },
+        },
+      });
       resolve();
     };
   });
@@ -386,6 +423,7 @@ async function pollForCompletion(
       job: Job;
       output: string | null;
     };
+    const errorPayload = parseErrorPayload(job.error);
     setMessages((prev) =>
       prev.map((m) =>
         m.id === assistantId
@@ -394,7 +432,7 @@ async function pollForCompletion(
               text: job.type === "TEXT" ? (output ?? m.text) : m.text,
               image: job.type === "IMAGE" ? (output ?? undefined) : undefined,
               status: job.status,
-              error: job.error ?? null,
+              error: errorPayload,
               estimatedCost:
                 job.estimatedCost != null ? Number(job.estimatedCost) : null,
             }
@@ -407,7 +445,15 @@ async function pollForCompletion(
       job.status === "CANCELLED"
     ) {
       if (job.status === "FAILED") {
-        toast.error(job.error ?? "Job failed");
+        notifyError(
+          new AppError(
+            0,
+            errorPayload ?? {
+              code: "job.failed",
+              message: "The job failed.",
+            }
+          )
+        );
       }
       return;
     }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
+import { ERRORS, withErrorHandler } from "@/lib/api-errors";
 import { createSession, listSessionsForUser } from "@/lib/db/sessions";
 
 const createSessionSchema = z.object({
@@ -15,41 +16,31 @@ function deriveTitle(prompt: string): string {
   return `${cleaned.slice(0, 60)}…`;
 }
 
-export async function POST(request: Request) {
+export const POST = withErrorHandler(async (request: Request) => {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (!session?.user?.id) throw ERRORS.unauthorized();
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+    throw ERRORS.invalidJson();
   }
 
-  const parsed = createSessionSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "invalid body", issues: parsed.error.issues },
-      { status: 400 }
-    );
-  }
+  const parsed = createSessionSchema.parse(body);
 
   const created = await createSession({
     userId: session.user.id,
-    title: deriveTitle(parsed.data.firstPrompt),
+    title: deriveTitle(parsed.firstPrompt),
   });
 
   return NextResponse.json({ session: created }, { status: 201 });
-}
+});
 
-export async function GET() {
+export const GET = withErrorHandler(async () => {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (!session?.user?.id) throw ERRORS.unauthorized();
 
   const rows = await listSessionsForUser(session.user.id, { limit: 100 });
   return NextResponse.json({ sessions: rows });
-}
+});

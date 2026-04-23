@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
+import { ERRORS, withErrorHandler } from "@/lib/api-errors";
 import {
   LOG_LIST_KEY,
   LOG_LIST_MAX,
@@ -9,11 +10,10 @@ import {
 } from "@/lib/queue";
 import { getActiveStreams } from "@/lib/system/metrics";
 
-export async function GET() {
+export const GET = withErrorHandler(async () => {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (!session?.user?.id) throw ERRORS.unauthorized();
+
   const queue = getJobQueue();
   const redis = createRedis();
   try {
@@ -46,4 +46,4 @@ export async function GET() {
   } finally {
     await redis.quit();
   }
-}
+});

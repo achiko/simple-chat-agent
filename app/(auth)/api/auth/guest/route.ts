@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { signIn } from "@/app/(auth)/auth";
-import { isDevelopmentEnvironment } from "@/lib/constants";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -11,10 +10,16 @@ export async function GET(request: Request) {
       ? rawRedirect
       : "/";
 
+  // Match proxy.ts: detect HTTPS from the actual request, not NODE_ENV, so
+  // the cookie name (authjs.session-token vs __Secure-authjs.session-token)
+  // lines up with whatever NextAuth wrote at signIn time.
+  const isHttps =
+    new URL(request.url).protocol === "https:" ||
+    request.headers.get("x-forwarded-proto") === "https";
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
+    secureCookie: isHttps,
   });
 
   if (token) {

@@ -3,6 +3,7 @@ loadEnv({ path: ".env.local" });
 loadEnv();
 
 import { Worker } from "bullmq";
+import { mapToAppError } from "@/lib/api-errors";
 import { getJob, setJobStatus } from "@/lib/db/jobs";
 import {
   JOB_QUEUE_NAME,
@@ -14,6 +15,13 @@ import { startHeartbeat } from "./heartbeat";
 import { pushLog } from "./log";
 import { processImageJob } from "./processors/image";
 import { processTextJob } from "./processors/text";
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[worker] unhandledRejection", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[worker] uncaughtException", err);
+});
 
 const connection = createRedis();
 const publisher = createRedis();
@@ -41,12 +49,12 @@ const worker = new Worker<JobPayload>(
         throw new Error(`Unknown job type: ${job.type}`);
       }
     } catch (err) {
-      const message = (err as Error).message ?? String(err);
+      const payload = mapToAppError(err).payload;
       await pushLog(logger, "error", "job.failed_attempt", {
         jobId: job.id,
         attempt: bullJob.attemptsMade + 1,
         maxAttempts: bullJob.opts.attempts ?? 1,
-        error: message,
+        error: payload,
       });
       const attempt = bullJob.attemptsMade + 1;
       const max = bullJob.opts.attempts ?? 1;
@@ -54,12 +62,12 @@ const worker = new Worker<JobPayload>(
         await setJobStatus({
           id: job.id,
           status: "FAILED",
-          error: message,
+          error: JSON.stringify(payload),
         });
         try {
           await publisher.publish(
             streamChannel(job.id),
-            JSON.stringify({ error: message, done: true })
+            JSON.stringify({ done: true, error: payload })
           );
         } catch {}
       }

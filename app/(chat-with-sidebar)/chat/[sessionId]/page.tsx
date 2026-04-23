@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "@/app/(auth)/auth";
 import { ChatTab, type InitialMessage } from "@/components/chat-tab";
+import type { ErrorPayload } from "@/lib/api-errors";
 import { getJobsWithOutputsBySession, getSession } from "@/lib/db/sessions";
 
 export default function Page({
@@ -59,7 +60,7 @@ async function ChatSessionLoader({
       text: job.type === "TEXT" ? (output ?? "") : "",
       image: job.type === "IMAGE" && output ? output : undefined,
       status: job.status,
-      error: job.error,
+      error: parseStoredError(job.error),
       inputTokens: job.inputTokens,
       outputTokens: job.outputTokens,
       totalTokens: job.totalTokens,
@@ -77,4 +78,20 @@ async function ChatSessionLoader({
       key={sessionId}
     />
   );
+}
+
+function parseStoredError(raw: string | null): ErrorPayload | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      typeof parsed.code === "string" &&
+      typeof parsed.message === "string"
+    ) {
+      return parsed as ErrorPayload;
+    }
+  } catch {}
+  return { code: "internal", message: raw };
 }

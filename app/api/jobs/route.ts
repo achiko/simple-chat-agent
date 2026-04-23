@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
+import { ERRORS, withErrorHandler } from "@/lib/api-errors";
 import { createJob, listJobs } from "@/lib/db/jobs";
 import { JOB_STATUSES, JOB_TYPES } from "@/lib/db/schema";
 import { getSession, touchSession } from "@/lib/db/sessions";
@@ -13,53 +14,41 @@ const createJobSchema = z.object({
   sessionId: z.string().uuid().optional(),
 });
 
-export async function POST(request: Request) {
+export const POST = withErrorHandler(async (request: Request) => {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (!session?.user?.id) throw ERRORS.unauthorized();
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+    throw ERRORS.invalidJson();
   }
 
-  const parsed = createJobSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "invalid body", issues: parsed.error.issues },
-      { status: 400 }
-    );
-  }
+  const parsed = createJobSchema.parse(body);
 
-  if (parsed.data.sessionId) {
-    const owned = await getSession(parsed.data.sessionId);
-    if (!owned) {
-      return NextResponse.json({ error: "session not found" }, { status: 404 });
-    }
-    if (owned.userId !== session.user.id) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
-    }
+  if (parsed.sessionId) {
+    const owned = await getSession(parsed.sessionId);
+    if (!owned) throw ERRORS.notFound("Session");
+    if (owned.userId !== session.user.id) throw ERRORS.forbidden();
   }
 
   const job = await createJob({
     userId: session.user.id,
-    prompt: parsed.data.prompt,
-    type: parsed.data.type,
-    model: parsed.data.model,
-    sessionId: parsed.data.sessionId,
+    prompt: parsed.prompt,
+    type: parsed.type,
+    model: parsed.model,
+    sessionId: parsed.sessionId,
   });
 
-  if (parsed.data.sessionId) {
-    await touchSession(parsed.data.sessionId);
+  if (parsed.sessionId) {
+    await touchSession(parsed.sessionId);
   }
 
   await enqueueJob(job.id);
 
   return NextResponse.json({ job }, { status: 201 });
-}
+});
 
 const listQuerySchema = z.object({
   type: z.enum(JOB_TYPES).optional(),
@@ -69,31 +58,23 @@ const listQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 });
 
-export async function GET(request: Request) {
+export const GET = withErrorHandler(async (request: Request) => {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (!session?.user?.id) throw ERRORS.unauthorized();
 
   const { searchParams } = new URL(request.url);
-  const parsed = listQuerySchema.safeParse(
+  const parsed = listQuerySchema.parse(
     Object.fromEntries(searchParams.entries())
   );
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "invalid query", issues: parsed.error.issues },
-      { status: 400 }
-    );
-  }
 
   const rows = await listJobs({
     userId: session.user.id,
-    type: parsed.data.type,
-    status: parsed.data.status,
-    sessionId: parsed.data.sessionId,
-    limit: parsed.data.limit,
-    offset: parsed.data.offset,
+    type: parsed.type,
+    status: parsed.status,
+    sessionId: parsed.sessionId,
+    limit: parsed.limit,
+    offset: parsed.offset,
   });
 
   return NextResponse.json({ jobs: rows });
-}
+});

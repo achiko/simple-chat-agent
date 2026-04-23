@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { experimental_generateImage as generateImage } from "ai";
 import type { Redis } from "ioredis";
+import { ERRORS } from "@/lib/api-errors";
 import { completeJob, setJobStatus } from "@/lib/db/jobs";
 import type { Job } from "@/lib/db/schema";
 import { estimateImageCost } from "@/lib/pricing";
@@ -16,6 +17,7 @@ export async function processImageJob(params: {
   logger: Redis;
 }): Promise<void> {
   const { job, logger } = params;
+  if (!process.env.OPENAI_API_KEY) throw ERRORS.aiKeyMissing();
   await setJobStatus({ id: job.id, status: "STARTED" });
   await pushLog(logger, "info", "image.start", { jobId: job.id });
 

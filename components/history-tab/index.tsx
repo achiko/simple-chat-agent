@@ -2,15 +2,27 @@
 
 import useSWR from "swr";
 import { JobRow } from "@/components/job-row";
+import { ErrorCard } from "@/components/ui/error-card";
+import { notifyError, toAppError } from "@/lib/client-errors";
 import type { Job } from "@/lib/db/schema";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const { readApiError } = await import("@/lib/client-errors");
+    throw await readApiError(res);
+  }
+  return res.json();
+};
 
 export function HistoryTab() {
-  const { data, isLoading, mutate } = useSWR<{ jobs: Job[] }>(
+  const { data, error, isLoading, mutate } = useSWR<{ jobs: Job[] }>(
     "/api/jobs",
     fetcher,
-    { refreshInterval: 3000 }
+    {
+      refreshInterval: 3000,
+      onError: (err) => notifyError(toAppError(err)),
+    }
   );
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -24,7 +36,15 @@ export function HistoryTab() {
           Refresh
         </button>
       </div>
-      {isLoading ? <div className="text-muted-foreground">Loading…</div> : null}
+      {error && !data ? (
+        <ErrorCard
+          error={toAppError(error).payload}
+          action={{ label: "Retry", onClick: () => void mutate() }}
+        />
+      ) : null}
+      {isLoading && !error ? (
+        <div className="text-muted-foreground">Loading…</div>
+      ) : null}
       <div className="space-y-2">
         {data?.jobs.map((job) => (
           <JobRow key={job.id} job={job} />

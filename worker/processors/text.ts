@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import type { Redis } from "ioredis";
+import { ERRORS } from "@/lib/api-errors";
 import { completeJob, setJobStatus } from "@/lib/db/jobs";
 import type { Job } from "@/lib/db/schema";
 import { estimateTextCost } from "@/lib/pricing";
@@ -17,6 +18,8 @@ export async function processTextJob(params: {
   const { job, publisher, logger } = params;
   const channel = streamChannel(job.id);
   const listKey = chunksKey(job.id);
+
+  if (!process.env.OPENAI_API_KEY) throw ERRORS.aiKeyMissing();
 
   await setJobStatus({ id: job.id, status: "STARTED" });
   await setJobStatus({ id: job.id, status: "STREAMING" });
